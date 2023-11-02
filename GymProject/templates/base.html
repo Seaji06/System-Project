@@ -44,7 +44,12 @@
                             <li class=""><a href="trainers">Trainers</a></li>
                             <li class=""><a href="about">About</a></li>
                             <li class=""><a href="contact">Contact</a></li> 
-                            <li class=""><a href="login">Login</a></li>
+                            {% if user.is_authenticated %}
+                            <li class=""><a href="{% url 'profile' %}">View Profile</a></li>
+                            <li class=""><a href="{% url 'logout' %}">Logout</a></li>
+                            {% else %}
+                                <li class=""><a href="{% url 'login' %}">Login</a></li>
+                            {% endif %}                                               
                         </ul>        
                         <a class='menu-trigger'>
                             <span>Menu</span>

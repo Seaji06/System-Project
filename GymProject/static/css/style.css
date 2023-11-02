@@ -1214,3 +1214,82 @@ responsive
     margin-left: 130px;
   }
 }
+
+/* 
+---------------------------------------------
+login and register
+--------------------------------------------- 
+*/
+
+.login-register-form, .user-profile-form{
+  background: #fff;
+  margin: auto; 
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+  display: flex; 
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+
+.login-register-form h2 {
+  font-size: 24px;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: #232d39;
+  letter-spacing: 0.5px;
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.login-register-form label {
+  font-size: 16px;
+  color: #7a7a7a;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.login-register-form input[type="text"],
+.login-register-form input[type="password"],
+.login-register-form input[type="email"] {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+.login-register-form button {
+  background-color: #ed563b;
+  color: #fff;
+  text-align: center;
+  font-weight: 400;
+  text-transform: uppercase;
+  font-size: 15px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.login-register-form button:hover {
+  background-color: #f9735b;
+}
+
+.login-register-form .form-link {
+  font-size: 13px;
+  color: #ed563b;
+  text-transform: uppercase;
+  text-decoration: none;
+  display: block;
+  text-align: center;
+  margin-top: 10px;
+}
+
+#error{
+  color: red;
+}
