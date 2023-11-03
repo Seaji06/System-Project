@@ -28,9 +28,9 @@ def user_register(request):
         email = request.POST['email']
         password = request.POST['new-password']
         confirm_password = request.POST['confirm-password']
-        birthday = request.POST['birthday']
         first_name = request.POST['first_name']
         last_name = request.POST['last_name']
+        birthday = request.POST['birthday']
 
         if password != confirm_password:
             messages.error(request, 'Passwords do not match')
@@ -44,16 +44,16 @@ def user_register(request):
             messages.error(request, 'Email already exists')
             return render(request, 'register.html')
 
-        user = User.objects.create_user(username, email, password)
-        user.first_name = first_name
-        user.last_name = last_name
-        user.save()
+        # Check if a UserProfile already exists for this User
+        user = User.objects.create_user(username, email, password, first_name=first_name, last_name=last_name)
+        user_profile, created = UserProfile.objects.get_or_create(user=user, defaults={'birthday': birthday})
 
-        # Create a UserProfile for the user
-        UserProfile.objects.create(user=user, birthday=birthday)
+        # If a UserProfile was created, update the birthday
+        if not created:
+            user_profile.birthday = birthday
+            user_profile.save()
 
-        login(request, user)
-        return redirect('home')  # Redirect to your home page after registration
+        return redirect('login')
 
     return render(request, 'register.html')
 
@@ -78,15 +78,15 @@ def user_logout(request):
 
 def edit_profile(request):
     user_profile = UserProfile.objects.get(user=request.user)
-    
+
     if request.method == 'POST':
         form = UserProfileForm(request.POST, request.FILES, instance=user_profile)
         if form.is_valid():
             form.save()
             return redirect('profile')
     else:
-        form = UserProfileForm(instance=user_profile) 
-    
+        form = UserProfileForm(instance=user_profile)
+
     return render(request, 'edit_profile.html', {'form': form})
 
 def profile(request):

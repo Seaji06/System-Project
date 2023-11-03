@@ -4,7 +4,7 @@
 {% block title %}Edit Profile{% endblock %}
 
 {% block content %}
-  <div class="user-profile-form">
+  <div class="edit-profile-form">
     <h2>Edit User Profile</h2>
     <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
@@ -18,7 +18,7 @@
         <option value="Other" {% if form.gender.value == 'Other' %}selected{% endif %}>Other</option>
       </select>
       <label for="contact-number">Contact Number:</label>
-      <input type="number" id="contact-number" name="contact_number" value="{{ form.contact_number.value }}">
+      <input type="text" id="contact-number" name="contact_number" value="{{ form.contact_number.value }}">
       <button type="submit">Save Changes</button>
     </form>
   </div>
