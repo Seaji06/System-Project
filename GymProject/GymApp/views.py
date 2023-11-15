@@ -2,8 +2,9 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
-from .models import UserProfile
+from .models import UserProfile, Message
 from .forms import UserProfileForm 
+from django.core.mail import send_mail
 
 # Create your views here.
 
@@ -20,6 +21,25 @@ def about(request):
     return render(request, 'about.html')
 
 def contact(request):
+    if request.method == 'POST':
+        message = request.POST.get('message')
+        email = request.POST.get('email')
+        subject = request.POST.get('subject')
+        name = request.POST.get("name")
+
+        # Send email
+        send_mail(
+            subject,  
+            f"{message}\n\nName: {name}\nEmail: {email}", 
+            'settings.EMAIL_HOST_USER',
+            ["limcedricjohn@gmail.com"],  
+            fail_silently=False
+        )
+
+        # Create and save Message object
+        new_message = Message(name=name, message=message, subject=subject, email=email)
+        new_message.save()
+
     return render(request, 'contact.html')
 
 def user_register(request):

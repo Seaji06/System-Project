@@ -31,3 +31,12 @@ def save_user_profile(sender, instance, **kwargs):
         instance.userprofile.save()
     except UserProfile.DoesNotExist:
         UserProfile.objects.create(user=instance)
+
+class Message(models.Model):
+    name = models.CharField(max_length=255)
+    subject = models.CharField(max_length=255)
+    email = models.EmailField(max_length=255)
+    message = models.TextField()
+
+    def __str__(self):
+        return self.name
