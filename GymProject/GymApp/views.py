@@ -1,10 +1,19 @@
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
+from django.http import HttpResponse
 from django.contrib.auth.models import User
 from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
 from .models import UserProfile, Message
 from .forms import UserProfileForm 
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMessage
+from django.contrib.sites.shortcuts import get_current_site
+from django.template.loader import render_to_string
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth import authenticate, login, logout
+from . tokens import generate_token
+from django.conf import settings
 
 # Create your views here.
 
@@ -20,6 +29,7 @@ def trainers(request):
 def about(request):
     return render(request, 'about.html')
 
+@login_required(login_url='login')
 def contact(request):
     if request.method == 'POST':
         message = request.POST.get('message')
@@ -35,6 +45,11 @@ def contact(request):
             ["limcedricjohn@gmail.com"],  
             fail_silently=False
         )
+
+        if request.user.is_authenticated:
+            # Use the authenticated user's information
+            name = f"{request.user.first_name} {request.user.last_name}"
+            email = request.user.email
 
         # Create and save Message object
         new_message = Message(name=name, message=message, subject=subject, email=email)
@@ -67,12 +82,40 @@ def user_register(request):
         # Check if a UserProfile already exists for this User
         user = User.objects.create_user(username, email, password, first_name=first_name, last_name=last_name)
         user_profile, created = UserProfile.objects.get_or_create(user=user, defaults={'birthday': birthday})
-
+        user.is_active = False
+        user.save()
         # If a UserProfile was created, update the birthday
         if not created:
             user_profile.birthday = birthday
             user_profile.save()
 
+        messages.success(request, "Your Account has been created succesfully!! Please check your email to confirm your email address in order to activate your account.")
+        
+        # Welcome Email
+        #subject = "Welcome to MASHLE FITNESS GYM!!"
+        #message = "Hello " + user.first_name + "!! \n" + "Welcome to MASHLE!! \nThank you for visiting our website\n. We have also sent you a confirmation email, please confirm your email address. \n\nThanking You\nMANAGEMENT"        
+        #from_email = settings.EMAIL_HOST_USER
+        #to_list = [user.email]
+        #send_mail(subject, message, from_email, to_list, fail_silently=True)
+        
+        # Email Address Confirmation Email
+        current_site = get_current_site(request)
+        email_subject = "Confirm your Email @ MASHLE FITNESS GYM!!"
+        message2 = render_to_string('email_confirmation.html',{
+            
+            'name': user.first_name,
+            'domain': current_site.domain,
+            'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+            'token': generate_token.make_token(user)
+        })
+        email = EmailMessage(
+        email_subject,
+        message2,
+        settings.EMAIL_HOST_USER,
+        [user.email],
+        )
+        email.fail_silently = True
+        email.send()
         return redirect('login')
 
     return render(request, 'register.html')
@@ -112,3 +155,23 @@ def edit_profile(request):
 def profile(request):
     user_profile = UserProfile.objects.get(user=request.user)
     return render(request, 'profile.html', {'user_profile': user_profile})
+
+def activate(request,uidb64,token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError,ValueError,OverflowError,User.DoesNotExist):
+        user = None
+
+    if user is not None and generate_token.check_token(user,token):
+        if not user.is_active:
+            user.is_active = True
+            user.save()
+            messages.success(request, "Your account has been successfully activated!")
+        else:
+            messages.info(request, "Your account is already activated.")
+    else:
+        messages.error(request, "Invalid activation link. Please try again.")
+    
+    return redirect('login')
+

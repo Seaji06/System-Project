@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
 from django.conf import settings
 from django.conf.urls.static import static
@@ -15,6 +15,7 @@ urlpatterns = [
     path('register', views.user_register, name='register'),
     path('profile', views.profile, name='profile'),
     path('edit_profile', views.edit_profile, name='edit_profile'),
+    path('activate/<uidb64>/<token>', views.activate, name='activate'),
 ]
 
 if settings.DEBUG:

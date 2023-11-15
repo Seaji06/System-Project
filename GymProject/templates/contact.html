@@ -23,14 +23,14 @@
                             {% csrf_token %}
                         <div class="row">
                             <div class="col-md-6 col-sm-12">
-                            <fieldset>
-                                <input name="name" type="text" id="name" placeholder="Your Name*" required="">
-                            </fieldset>
+                                <fieldset>
+                                    <input name="name" type="text" id="name" placeholder="Your Name*" required="" value="{{ request.user.first_name }} {{ request.user.last_name }}" readonly>
+                                </fieldset>
                             </div>
                             <div class="col-md-6 col-sm-12">
-                            <fieldset>
-                                <input name="email" type="text" id="email" pattern="[^ @]*@[^ @]*" placeholder="Your Email*" required="">
-                            </fieldset>
+                                <fieldset>
+                                    <input name="email" type="email" id="email" placeholder="Your Email*" required="" value="{{ request.user.email }}" readonly>
+                                </fieldset>
                             </div>
                             <div class="col-md-12 col-sm-12">
                             <fieldset>
