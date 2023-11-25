@@ -11,11 +11,11 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.encoding import force_bytes, force_str
-from django.contrib.auth import authenticate, login, logout
 from . tokens import generate_token
 from django.conf import settings
 
 # Create your views here.
+
 
 def home(request):
     return render(request, 'home.html')
