@@ -45,11 +45,22 @@
                             <li class=""><a href="about">About</a></li>
                             <li class=""><a href="contact">Contact</a></li> 
                             {% if user.is_authenticated %}
-                                <li class=""><a href="{% url 'profile' %}">My Profile</a></li>
-                                <li class=""><a href="{% url 'logout' %}">Logout</a></li>
+                                <li class="dropdown">
+                                    <a href="#" class="dropdown-toggle" id="profileDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <i class="fa fa-user"></i>
+                                    </a>
+                                    <div class="dropdown-menu" aria-labelledby="profileDropdown">
+                                        <a class="dropdown-item" href="{% url 'profile' %}">View Profile</a>
+                                        <a class="dropdown-item" href="{% url 'profile' %}">Change Password</a> 
+                                        {% if user.is_staff %}
+                                        <a class="dropdown-item" href="{% url 'profile' %}">Admin Dashboard</a>
+                                        {% endif %}
+                                        <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
+                                    </div>
+                                </li>
                             {% else %}
                                 <li class=""><a href="{% url 'login' %}">Login</a></li>
-                            {% endif %}                                               
+                            {% endif %}                                          
                         </ul>        
                         <a class='menu-trigger'>
                             <span>Menu</span>
