@@ -1,8 +1,9 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
-from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth import login, authenticate, logout, update_session_auth_hash 
 from django.contrib import messages
 from .models import UserProfile, Message
 from .forms import UserProfileForm 
@@ -13,6 +14,7 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.encoding import force_bytes, force_str
 from . tokens import generate_token
 from django.conf import settings
+import json
 
 # Create your views here.
 
@@ -175,3 +177,49 @@ def activate(request,uidb64,token):
     
     return redirect('login')
 
+@csrf_exempt
+@login_required
+def update_classes(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))  # Decode the request body as UTF-8
+            class_name = data.get('class_name')
+
+            user_profile = request.user.userprofile
+
+            # Update the user's membership based on the selected class
+            if class_name == 'Novice Fitness Forge':
+                user_profile.membership = 'beginner_class'
+            elif class_name == 'Proactive Performance Prodigy':
+                user_profile.membership = 'intermediate_class'
+            elif class_name == 'Elite Fitness Fusion':
+                user_profile.membership = 'master_class'
+
+            user_profile.save()
+
+            return JsonResponse({'message': 'Classes updated successfully'}, status=200)
+
+        except json.JSONDecodeError as e:
+            return JsonResponse({'message': 'Invalid JSON format'}, status=400)
+    
+    return JsonResponse({'message': 'Invalid request'}, status=400)
+
+    
+@login_required
+def change_password(request):
+    if request.method == 'POST':
+        new_password = request.POST.get('new-password')
+        confirm_password = request.POST.get('confirm-password')
+
+        if new_password == confirm_password:
+            user = request.user
+            user.set_password(new_password)
+            user.save()
+            update_session_auth_hash(request, user)  # Update session to avoid logout
+            messages.success(request, 'Your password was successfully updated!')
+            return redirect('change_password')  # Redirect to the same page after successful password change
+        else:
+            messages.error(request, 'Passwords do not match!')
+            return redirect('change_password')  # Redirect to the same page if passwords do not match
+
+    return render(request, 'change_pass.html')
