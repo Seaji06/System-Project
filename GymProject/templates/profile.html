@@ -99,7 +99,9 @@
       <p><strong>Birthday:</strong> {{ user_profile.birthday }}</p>
       <p><strong>Contact Number:</strong> {{ user_profile.contact_number }}</p>
       <p><strong>Membership:</strong> {{ user_profile.membership }}</p>
-      <a href="{% url 'edit_profile' %}" class="btn btn-primary">Edit Profile</a>
+      <div class="main-button">
+        <a href="{% url 'edit_profile' %}">Edit Profile</a>
+      </div>
     </div>
   </div>
 {% endblock %}

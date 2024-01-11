@@ -22,6 +22,7 @@ import json
 def home(request):
     return render(request, 'home.html')
 
+@login_required(login_url='login')
 def classes(request):
     return render(request, 'classes.html')
 
@@ -204,7 +205,6 @@ def update_classes(request):
     
     return JsonResponse({'message': 'Invalid request'}, status=400)
 
-    
 @login_required
 def change_password(request):
     if request.method == 'POST':
