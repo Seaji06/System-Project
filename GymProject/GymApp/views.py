@@ -14,6 +14,7 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.encoding import force_bytes, force_str
 from . tokens import generate_token
 from django.conf import settings
+from django.contrib.auth.tokens import default_token_generator
 import json
 
 # Create your views here.
@@ -70,17 +71,26 @@ def user_register(request):
         last_name = request.POST['last_name']
         birthday = request.POST['birthday']
 
+        # Store entered values in case of errors
+        entered_values = {
+            'new_username': username,
+            'email': email,
+            'first_name': first_name,
+            'last_name': last_name,
+            'birthday': birthday,
+        }
+
         if password != confirm_password:
             messages.error(request, 'Passwords do not match')
-            return render(request, 'register.html')
+            return render(request, 'register.html', entered_values)
 
         if User.objects.filter(username=username).exists():
             messages.error(request, 'Username already exists')
-            return render(request, 'register.html')
+            return render(request, 'register.html', entered_values)
 
         if User.objects.filter(email=email).exists():
             messages.error(request, 'Email already exists')
-            return render(request, 'register.html')
+            return render(request, 'register.html', entered_values)
 
         # Check if a UserProfile already exists for this User
         user = User.objects.create_user(username, email, password, first_name=first_name, last_name=last_name)
@@ -92,30 +102,20 @@ def user_register(request):
             user_profile.birthday = birthday
             user_profile.save()
 
-        messages.success(request, "Your Account has been created succesfully!! Please check your email to confirm your email address in order to activate your account.")
-        
-        # Welcome Email
-        #subject = "Welcome to MASHLE FITNESS GYM!!"
-        #message = "Hello " + user.first_name + "!! \n" + "Welcome to MASHLE!! \nThank you for visiting our website\n. We have also sent you a confirmation email, please confirm your email address. \n\nThanking You\nMANAGEMENT"        
-        #from_email = settings.EMAIL_HOST_USER
-        #to_list = [user.email]
-        #send_mail(subject, message, from_email, to_list, fail_silently=True)
-        
-        # Email Address Confirmation Email
+        messages.success(request, "Your Account has been created successfully!! Please check your email to confirm your email address in order to activate your account.")
         current_site = get_current_site(request)
         email_subject = "Confirm your Email @ MASHLE FITNESS GYM!!"
-        message2 = render_to_string('email_confirmation.html',{
-            
+        message2 = render_to_string('email_confirmation.html', {
             'name': user.first_name,
             'domain': current_site.domain,
             'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-            'token': generate_token.make_token(user)
+            'token': default_token_generator.make_token(user)
         })
         email = EmailMessage(
-        email_subject,
-        message2,
-        settings.EMAIL_HOST_USER,
-        [user.email],
+            email_subject,
+            message2,
+            settings.EMAIL_HOST_USER,
+            [user.email],
         )
         email.fail_silently = True
         email.send()
@@ -166,7 +166,7 @@ def activate(request,uidb64,token):
     except (TypeError,ValueError,OverflowError,User.DoesNotExist):
         user = None
 
-    if user is not None and generate_token.check_token(user,token):
+    if user is not None and default_token_generator.check_token(user,token):
         if not user.is_active:
             user.is_active = True
             user.save()
@@ -197,6 +197,27 @@ def update_classes(request):
                 user_profile.membership = 'master_class'
 
             user_profile.save()
+
+            # Use user_profile instead of user
+            current_site = get_current_site(request)
+            email_subject = "Welcome to MASHLE FITNESS GYM - Get Ready to Transform!"
+            message2 = render_to_string('enroll_message.html',{
+                
+                'name': user_profile.user.first_name,  # Change 'user' to 'user_profile'
+                'domain': current_site.domain,
+                'uid': urlsafe_base64_encode(force_bytes(user_profile.user.pk)),  # Change 'user' to 'user_profile'
+                'token': generate_token.make_token(user_profile.user)  # Change 'user' to 'user_profile'
+            })
+
+            email = EmailMessage(
+                email_subject,
+                message2,
+                settings.EMAIL_HOST_USER,
+                [user_profile.user.email],  # Change 'user' to 'user_profile'
+            )
+            email.fail_silently = True
+            email.send()
+
 
             return JsonResponse({'message': 'Classes updated successfully'}, status=200)
 
