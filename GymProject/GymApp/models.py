@@ -40,3 +40,35 @@ class Message(models.Model):
 
     def __str__(self):
         return self.name
+
+class ClassSchedule(models.Model):
+    DAYS_CHOICES = [
+        ('monday', 'Monday'),
+        ('tuesday', 'Tuesday'),
+        ('wednesday', 'Wednesday'),
+        ('thursday', 'Thursday'),
+        ('friday', 'Friday'),
+    ]
+
+    class_name = models.CharField(max_length=255)
+    trainer_name = models.CharField(max_length=255)
+    day = models.CharField(max_length=10, choices=DAYS_CHOICES)
+    time_start = models.TimeField()
+    time_end = models.TimeField()
+
+    def __str__(self):
+        return self.class_name
+
+    def get_schedule_time(self, day):
+        if day == self.day.lower():
+            return f'{self.time_start.strftime("%I:%M%p")} - {self.time_end.strftime("%I:%M%p")}'
+        else:
+            return ''
+
+class Booking(models.Model):
+    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    class_schedule = models.ForeignKey(ClassSchedule, on_delete=models.CASCADE)
+    booking_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.user_profile.user.username} - {self.class_schedule.class_name}'

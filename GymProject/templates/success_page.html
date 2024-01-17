@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+  <div class="edit-profile-form">
+    <h1 class="display-4">Thank You for Booking!</h1>
+    <p class="lead">You have successfully booked the following class:</p>
+    <p class="lead">Class: {{ booking.class_schedule.class_name|default:"No Class" }}</p>
+    <div class="main-button">
+        <a href="classes">Back</a>
+    </div>
+  </div>
+{% endblock %}

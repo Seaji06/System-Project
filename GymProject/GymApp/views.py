@@ -1,11 +1,12 @@
 from django.contrib.auth.decorators import login_required
+from django.template.defaultfilters import linebreaks
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 from django.contrib.auth import login, authenticate, logout, update_session_auth_hash 
 from django.contrib import messages
-from .models import UserProfile, Message
+from .models import UserProfile, Message, ClassSchedule, Booking
 from .forms import UserProfileForm 
 from django.core.mail import send_mail, EmailMessage
 from django.contrib.sites.shortcuts import get_current_site
@@ -23,9 +24,16 @@ import json
 def home(request):
     return render(request, 'home.html')
 
-@login_required(login_url='login')
 def classes(request):
-    return render(request, 'classes.html')
+    class_schedules = ClassSchedule.objects.all()
+
+    # Create a dictionary to store schedule times for each day
+    schedule_times = {day: [schedule.get_schedule_time(day) for schedule in class_schedules] for day in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']}
+    
+    # Modify schedule_times to use linebreaks
+    modified_schedule_times = {day: [linebreaks(times) for times in schedule_times[day]] for day in schedule_times}
+
+    return render(request, 'classes.html', {'class_schedules': class_schedules, 'schedule_times': modified_schedule_times})
 
 def trainers(request):
     return render(request, 'trainers.html')
@@ -244,3 +252,35 @@ def change_password(request):
             return redirect('change_password')  # Redirect to the same page if passwords do not match
 
     return render(request, 'change_pass.html')
+    
+def create_booking(request):
+    if request.method == 'POST':
+        class_schedule_id = request.POST.get('class_schedule_id')
+        class_schedule = ClassSchedule.objects.get(id=class_schedule_id)
+
+        user_profile = request.user.userprofile
+
+        # Make sure to import the Booking model
+        booking = Booking.objects.create(user_profile=user_profile, class_schedule=class_schedule)
+
+        if class_schedule.class_name == 'Novice Fitness Forge':
+            user_profile.membership = 'beginner_class'
+        elif class_schedule.class_name == 'Proactive Performance Prodigy':
+            user_profile.membership = 'intermediate_class'
+        elif class_schedule.class_name == 'Elite Fitness Fusion':
+            user_profile.membership = 'master_class'
+
+        user_profile.save()
+
+        return redirect('success_page')  # Replace with the actual success page URL
+    else:
+        # Handle GET request or other cases
+        class_schedules = ClassSchedule.objects.all()
+        # Provide any additional context or logic needed for GET requests
+        return render(request, 'classes.html', {'class_schedules': class_schedules})
+
+def success_page(request):
+    # Assuming you have the booking object available
+    # You need to pass the booking object to the template context
+    booking = Booking.objects.last()  # Get the latest booking as an example
+    return render(request, 'success_page.html', {'booking': booking})
